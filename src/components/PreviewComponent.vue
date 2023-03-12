@@ -9,7 +9,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import { useDownload } from "/src/composable/useDownload.js"
 
 const props = defineProps({
@@ -23,7 +23,9 @@ const props = defineProps({
 	},
 });
 
-const text = ref(props.content);
+const text = computed(() => {
+	return props.content;
+})
 
 const { downloadFile } = useDownload();
 
