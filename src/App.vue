@@ -31,8 +31,7 @@ sudo a2ensite ${hostname.value}.conf
 echo "Config file enabled"
 
 sudo systemctl restart apache2
-echo "Apache restarted"
-`
+echo "Apache restarted"`
 })
 
 const scriptToRemove = computed(() => {
@@ -47,8 +46,7 @@ sudo rm /etc/apache2/sites-available/${hostname.value}.conf
 echo "Config file removed"
 
 sudo systemctl restart apache2
-echo "Apache restarted"
-`
+echo "Apache restarted"`
 })
 
 function downloadFiles() {
@@ -63,10 +61,10 @@ function downloadFiles() {
         <div class="w-full space-y-6 mx-8">
 
             <section class="shadow rounded-xl bg-white p-6">
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <!-- INFO -->
                     <div class="">
-                        <div class="text-gray-500 text-xl mb-3">Config Generator for Laravel</div>
+                        <div class="text-gray-500 text-xl mb-3">Apache Config Generator for Laravel</div>
                         <div class="mb-3">
                             <label class="text-gray-500 text-xs">Hostname</label>
                             <input v-model="hostname" type="text" class="input-primary" placeholder="Type the hostname">

@@ -2,7 +2,7 @@
     <div class="text-gray-500 text-base mb-2 cursor-pointer" @click="downloadFile(fileName, text)">
         {{ fileName }}
     </div>
-    <div class="file border-4 border-dashed border-transparent w-full bg-gray-800 rounded-xl md:rounded-br-none p-6 mb-4">
+    <div class="file border-4 border-dashed border-transparent w-full bg-gray-800 rounded-xl md:rounded-br-none p-4 mb-4">
         <textarea class="text-sm w-full bg-gray-800 text-white font-mono focus:outline-none"
         :rows="countLines" autocomplete="off" v-model="text" autocorrect="off" autocapitalize="off" spellcheck="false" readonly></textarea>
     </div>
