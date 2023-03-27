@@ -1,4 +1,4 @@
-# Apache Config Generator for Laravel projects
+# Apache Config Generator for Laravel
 
 ### Setup the project
 
