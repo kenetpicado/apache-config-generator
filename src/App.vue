@@ -6,6 +6,19 @@ const hostname = ref('example.test')
 const path = ref('/var/www/testing/public')
 const { downloadFile } = useDownload();
 
+const GREEN = "\\033[1;32m";
+const RED = "\\033[1;31m";
+const RESET = "\\033[0m";
+const CHECK_MARK = "\\xE2\\x9C\\x94";
+
+const functionsToPrint = `print_success() {
+  echo -e "${GREEN}${CHECK_MARK} $1${RESET}"
+}
+
+print_error() {
+  echo -e "${RED}✗ $1${RESET}"
+}`
+
 const configFile = computed(() => {
     return `<VirtualHost *:80>
     DocumentRoot "${path.value}"
@@ -20,32 +33,70 @@ const configFile = computed(() => {
 
 const scriptToDeploy = computed(() => {
     return `#!/bin/bash
-sudo echo "127.0.0.1    ${hostname.value}" >> /etc/hosts
-echo "Hostname added to /etc/hosts"
+
+${functionsToPrint}
+
+sudo sh -c "echo '127.0.0.1    ${hostname.value}' >> /etc/hosts"
+if [ $? -eq 0 ]; then
+  print_success "Hostname added to /etc/hosts"
+else
+  echo "Failed to add hostname to /etc/hosts"
+fi
 
 sudo mv ${hostname.value}.conf /etc/apache2/sites-available/${hostname.value}.conf
-echo "Config file moved to /etc/apache2/sites-available/"
+if [ $? -eq 0 ]; then
+  print_success "Config file moved to /etc/apache2/sites-available/"
+else
+  echo "Failed to move config file"
+fi
 
 sudo a2ensite ${hostname.value}.conf
-echo "Config file enabled"
+if [ $? -eq 0 ]; then
+  print_success "Config file enabled"
+else
+  echo "Failed to enable config file"
+fi
 
 sudo systemctl restart apache2
-echo "Apache restarted"`
+if [ $? -eq 0 ]; then
+  print_success "Apache restarted"
+else
+  echo "Failed to restart Apache"
+fi`
 })
 
 const scriptToRemove = computed(() => {
     return `#!/bin/bash
+
+${functionsToPrint}
+
 sudo sed -i "/127.0.0.1    ${hostname.value}/d" /etc/hosts
-echo "Hostname removed from /etc/hosts"
+if [ $? -eq 0 ]; then
+  print_success "Hostname removed from /etc/hosts"
+else
+  print_error "Failed to remove hostname from /etc/hosts"
+fi
 
 sudo a2dissite ${hostname.value}.conf
-echo "Config file disabled"
+if [ $? -eq 0 ]; then
+  print_success "Config file disabled"
+else
+  print_error "Failed to disable config file"
+fi
 
 sudo rm /etc/apache2/sites-available/${hostname.value}.conf
-echo "Config file removed"
+if [ $? -eq 0 ]; then
+  print_success "Config file removed"
+else
+  print_error "Failed to remove config file"
+fi
 
 sudo systemctl restart apache2
-echo "Apache restarted"`
+if [ $? -eq 0 ]; then
+  print_success "Apache restarted"
+else
+  print_error "Failed to restart Apache"
+fi`
 })
 
 function downloadFiles() {
@@ -79,7 +130,8 @@ function downloadFiles() {
                                 <li>Download Files</li>
                                 <li>sudo chmod u+x {{ `deploy-${hostname}.sh` }}</li>
                                 <li>sudo ./{{ `deploy-${hostname}.sh` }}</li>
-                                <li>Access to <a :href="`http://${hostname}`" class="text-gray-800" target="_blank">http://{{ hostname }}</a></li>
+                                <li>Access to <a :href="`http://${hostname}`" class="text-gray-800"
+                                        target="_blank">http://{{ hostname }}</a></li>
                                 <li>Enjoy your development!</li>
                             </ul>
                         </div>
