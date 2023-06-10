@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed } from 'vue'
-import PreviewComponent from '/src/components/PreviewComponent.vue'
 import { useDownload } from "/src/composable/useDownload.js"
 
 const hostname = ref('example.test')
@@ -62,39 +61,58 @@ function downloadFiles() {
 
             <section class="shadow rounded-xl bg-white p-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <!-- INFO -->
-                    <div class="">
+
+                    <div>
                         <div class="text-gray-500 text-xl mb-3">Apache Config Generator for Laravel</div>
                         <div class="mb-3">
                             <label class="text-gray-500 text-xs">Hostname</label>
                             <input v-model="hostname" type="text" class="input-primary" placeholder="Type the hostname">
                         </div>
                         <div class="mb-3">
-                            <span class="text-gray-500 text-xs">Path</span>
+                            <span class="text-gray-500 text-xs">Project path</span>
                             <input v-model="path" type="text" class="input-primary" placeholder="Type the path">
                         </div>
-                        <button @click="downloadFiles()" class="btn-primary">Download Files</button>
+
                         <div class="text-gray-500 text-xl my-3">Instructions</div>
-                        <p class="text-xs text-gray-500 leading-relaxed">
+                        <div class="text-xs text-gray-500 leading-relaxed">
                             <ul class="space-y-2 list-disc list-inside">
                                 <li>Download Files</li>
                                 <li>sudo chmod u+x {{ `deploy-${hostname}.sh` }}</li>
                                 <li>sudo ./{{ `deploy-${hostname}.sh` }}</li>
+                                <li>Access to <a :href="`http://${hostname}`" class="text-gray-800" target="_blank">http://{{ hostname }}</a></li>
                                 <li>Enjoy your development!</li>
                             </ul>
-                        </p>
+                        </div>
+
+                        <button @click="downloadFiles()" class="btn-primary mt-4">Download Files</button>
                     </div>
-                    <!-- PREVIEW FILE CONF -->
+
+                    <!-- PREVIEW FILES -->
                     <div class="col-span-2 w-full">
-                        <PreviewComponent :content="configFile"
-                            :fileName="`${hostname}.conf`">
-                        </PreviewComponent>
-                        <PreviewComponent :content="scriptToDeploy"
-                            :fileName="`deploy-${hostname}.sh`">
-                        </PreviewComponent>
-                        <PreviewComponent :content="scriptToRemove"
-                            :fileName="`remove-${hostname}.sh`">
-                        </PreviewComponent>
+                        <button class="mb-3">
+                            <span class="badge-primary">
+                                {{ hostname }}.conf
+                            </span>
+                        </button>
+                        <div class="p-4 bg-gray-100 rounded-xl text-sm">
+                            <pre>{{ configFile }}</pre>
+                        </div>
+                        <button class="mt-6 mb-3">
+                            <span class="badge-primary">
+                                deploy-{{ hostname }}.sh
+                            </span>
+                        </button>
+                        <div class="p-4 bg-gray-100 rounded-xl text-sm">
+                            <pre>{{ scriptToDeploy }}</pre>
+                        </div>
+                        <button class="mt-6 mb-3">
+                            <span class="badge-primary">
+                                remove-{{ hostname }}.sh
+                            </span>
+                        </button>
+                        <div class="p-4 bg-gray-100 rounded-xl text-sm">
+                            <pre>{{ scriptToRemove }}</pre>
+                        </div>
                     </div>
                 </div>
             </section>
