@@ -1,6 +1,8 @@
 # Apache Config Generator
 
-This program allows you to generate the configuration files for an Apache server, it is only necessary to enter the hostname and the location of the project.
+This program allows you to generate the configuration files for an Apache server from a Laravel project, it is only necessary to enter the hostname and the location of the project.
+
+The scripts are only valid for Linux based systems
 
 
 -  [Demo](https://kenetpicado.github.io/apache-config-generator/)
