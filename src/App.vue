@@ -5,6 +5,7 @@ import { useDownload } from "/src/composable/useDownload.js"
 const hostname = ref('example.test')
 const path = ref('/var/www/testing/public')
 const { downloadFile } = useDownload();
+const type = ref('Apache')
 
 const GREEN = "\\033[1;32m";
 const RED = "\\033[1;31m";
@@ -23,12 +24,39 @@ const configFile = computed(() => {
     return `<VirtualHost *:80>
     DocumentRoot "${path.value}"
     ServerName ${hostname.value.toLowerCase()}
-    ServerAlias *.${hostname.value.toLowerCase()}
     <Directory "${path.value}">
         AllowOverride All
         Require all granted
     </Directory>
 </VirtualHost>`
+})
+
+const configFileNginx = computed(() => {
+    return `server {
+    listen 80;
+    server_name ${hostname.value.toLowerCase()};
+
+    root ${path.value};
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \\.php$ {
+        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+
+    location ~ /\\.(?!well-known).* {
+        deny all;
+    }
+}`
 })
 
 const scriptToDeploy = computed(() => {
@@ -43,14 +71,14 @@ else
   echo "Failed to add hostname to /etc/hosts"
 fi
 
-sudo mv ${hostname.value}.conf /etc/apache2/sites-available/${hostname.value}.conf
+sudo mv ${fileName.value} /etc/apache2/sites-available/${fileName.value}
 if [ $? -eq 0 ]; then
   print_success "Config file moved to /etc/apache2/sites-available/"
 else
   echo "Failed to move config file"
 fi
 
-sudo a2ensite ${hostname.value}.conf
+sudo a2ensite ${fileName.value}
 if [ $? -eq 0 ]; then
   print_success "Config file enabled"
 else
@@ -77,14 +105,14 @@ else
   print_error "Failed to remove hostname from /etc/hosts"
 fi
 
-sudo a2dissite ${hostname.value}.conf
+sudo a2dissite ${fileName.value}
 if [ $? -eq 0 ]; then
   print_success "Config file disabled"
 else
   print_error "Failed to disable config file"
 fi
 
-sudo rm /etc/apache2/sites-available/${hostname.value}.conf
+sudo rm /etc/apache2/sites-available/${fileName.value}
 if [ $? -eq 0 ]; then
   print_success "Config file removed"
 else
@@ -99,8 +127,19 @@ else
 fi`
 })
 
+const fileName = computed(() => {
+    if (type.value == 'Apache')
+        return hostname.value + ".conf"
+    else
+        return hostname.value
+})
+
 function downloadFiles() {
-    downloadFile(`${hostname.value}.conf`, configFile.value)
+    if (type.value == 'Apache')
+        downloadFile(`${fileName.value}`, configFile.value)
+    else
+        downloadFile(`${fileName.value}`, configFileNginx.value)
+
     downloadFile(`deploy-${hostname.value}.sh`, scriptToDeploy.value)
     downloadFile(`remove-${hostname.value}.sh`, scriptToRemove.value)
 }
@@ -114,7 +153,7 @@ function downloadFiles() {
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     <div>
-                        <div class="text-gray-500 text-xl mb-3">Apache Config Generator for Laravel</div>
+                        <div class="text-gray-500 text-xl mb-3">Web Server Config Generator</div>
                         <div class="mb-3">
                             <label class="text-gray-500 text-xs">Hostname</label>
                             <input v-model="hostname" type="text" class="input-primary" placeholder="Type the hostname">
@@ -122,6 +161,13 @@ function downloadFiles() {
                         <div class="mb-3">
                             <span class="text-gray-500 text-xs">Project path</span>
                             <input v-model="path" type="text" class="input-primary" placeholder="Type the path">
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-gray-500 text-xs">Web Server</span>
+                            <select v-model="type" class="input-primary" placeholder="Type the path">
+                                <option value="Apache">Apache</option>
+                                <option value="Nginx">Nginx</option>
+                            </select>
                         </div>
 
                         <div class="text-gray-500 text-xl my-3">Instructions</div>
@@ -141,20 +187,32 @@ function downloadFiles() {
 
                     <!-- PREVIEW FILES -->
                     <div class="col-span-2 w-full">
-                        <button class="mb-3">
+                        <template v-if="type == 'Apache'">
+                            <button class="mb-3">
                             <span class="badge-primary">
-                                {{ hostname }}.conf
+                                {{ fileName }}
                             </span>
-                        </button>
-                        <div class="p-4 bg-gray-100 rounded-xl text-sm">
-                            <pre>{{ configFile }}</pre>
-                        </div>
+                            </button>
+                            <div class="p-4 bg-gray-100 rounded-xl text-sm overflow-x-auto">
+                                <pre>{{ configFile }}</pre>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <button class="mb-3">
+                                <span class="badge-primary">
+                                    {{ fileName }}
+                                </span>
+                            </button>
+                            <div class="p-4 bg-gray-100 rounded-xl text-sm overflow-x-auto">
+                                <pre>{{ configFileNginx }}</pre>
+                            </div>
+                        </template>
                         <button class="mt-6 mb-3">
                             <span class="badge-primary">
                                 deploy-{{ hostname }}.sh
                             </span>
                         </button>
-                        <div class="p-4 bg-gray-100 rounded-xl text-sm">
+                        <div class="p-4 bg-gray-100 rounded-xl text-sm overflow-x-auto">
                             <pre>{{ scriptToDeploy }}</pre>
                         </div>
                         <button class="mt-6 mb-3">
@@ -162,7 +220,7 @@ function downloadFiles() {
                                 remove-{{ hostname }}.sh
                             </span>
                         </button>
-                        <div class="p-4 bg-gray-100 rounded-xl text-sm">
+                        <div class="p-4 bg-gray-100 rounded-xl text-sm overflow-x-auto">
                             <pre>{{ scriptToRemove }}</pre>
                         </div>
                     </div>
